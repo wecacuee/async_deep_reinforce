@@ -34,9 +34,22 @@ def log_uniform(lo, hi, rate):
   v = log_lo * (1-rate) + log_hi * rate
   return math.exp(v)
 
+def getgpuid():
+    import os, re
+    gpufile = os.environ["PBS_GPUFILE"]
+    pat = re.compile(".*-gpu([0-9]+)")
+    if not os.path.exists(gpufile):
+        return 0
+    else:
+        line = open(gpufile).readline().strip()
+        g = pat.match()
+        if not g:
+            raise RuntimeError("Unable to parse %s" % line) 
+        return int(g.group(1))
+
 device = "/cpu:0"
 if USE_GPU:
-  device = "/gpu:0"
+  device = "/gpu:%d" % getgpuid()
 
 initial_learning_rate = log_uniform(INITIAL_ALPHA_LOW,
                                     INITIAL_ALPHA_HIGH,
